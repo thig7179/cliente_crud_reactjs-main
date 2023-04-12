@@ -1,4 +1,4 @@
-import { SetStateAction, useState } from "react";
+import { ChangeEvent, SetStateAction, useEffect, useState } from "react";
 import TextField from "@material-ui/core/TextField";
 import Grid from "@material-ui/core/Grid";
 import InputLabel from "@material-ui/core/InputLabel";
@@ -13,18 +13,30 @@ import DeleteIcon from "@material-ui/icons/Delete";
 import { toast } from "react-toastify";
 import { httpService } from "../../../services/HttpService";
 import { Cliente, Endereco } from "../../../types/Cliente";
+import axios from "axios";
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 type Props = {
   cliente: Cliente;
   enderecos: Endereco;
   removeItem: (id: string) => void;
 };
+type IBGEUFResponse = {
+  sigla: string;
+  nome: string;
+};
+type IBGECITYResponse = {
+  id: number;
+  nome: string;
+};
 export function FormAddress({ cliente, enderecos, removeItem }: Props) {
   const [localId, setLocalId] = useState(enderecos.localId || "");
   const [isEdit, setIsEdit] = useState(!enderecos.id || false);
   const [endereco, setEndereco] = useState(enderecos.endereco || "");
-  const [UF, setUF] = useState(enderecos.UF || "");
-  const [cidade, setCidade] = useState(enderecos.cidade || "");
+  const [ufs, setUfs] = useState<IBGEUFResponse[]>([]);
+  const [cities, setCities] = useState<IBGECITYResponse[]>([]);
+  const [UF, setSelectedUf] = useState(enderecos.UF || "0");
+  const [cidade, setSelectedCity] = useState(enderecos.cidade || "0");
   function handleSubmit() {
     const enderecoToSend = new Endereco({
       localId,
@@ -67,9 +79,36 @@ export function FormAddress({ cliente, enderecos, removeItem }: Props) {
     }
     removeItem(enderecos.localId);
   }
-  function states(){
-    return fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/distritos`)
-    .then(response => response.json())
+
+  useEffect(() => {
+    if (UF === "0") {
+      return;
+    }
+    axios
+      .get(
+        `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${UF}/municipios`
+      )
+      .then((response) => {
+        setCities(response.data);
+      });
+  });
+
+  useEffect(() => {
+    axios
+      .get("https://servicodados.ibge.gov.br/api/v1/localidades/estados/")
+      .then((response) => {
+        setUfs(response.data);
+      });
+  }, [UF]);
+
+  function handleSelectUf(event: ChangeEvent<HTMLSelectElement>) {
+    const uf = event.target.value;
+    setSelectedUf(uf);
+  }
+
+  function handleSelectCity(event: ChangeEvent<HTMLSelectElement>) {
+    const city = event.target.value;
+    setSelectedCity(city);
   }
   return (
     <Grid container spacing={1}>
@@ -120,24 +159,34 @@ export function FormAddress({ cliente, enderecos, removeItem }: Props) {
         />
       </Grid>
       <Grid item md={6}>
-        <TextField
-          disabled={!isEdit}
-          label="UF"
-          type="text"
-          fullWidth
-          value={UF}
-          onChange={(e: { target: { value: SetStateAction<string>; }; }) => setUF(e.target.value)}
-        />
+        <select
+        className="form-select"
+        disabled={!isEdit} 
+        name="uf" 
+        id="uf"
+        value={UF} 
+        onChange={handleSelectUf}>
+          <option value="0">Selecione uma UF</option>
+          {ufs.map((uf) => (
+            <option value={uf.sigla}>{uf.nome}</option>
+          ))}
+        </select>
       </Grid>
       <Grid item md={6}>
-        <TextField
+        <select
           disabled={!isEdit}
-          label="Cidade"
-          type="text"
-          fullWidth
+          name="City"
+          id="City"
           value={cidade}
-          onChange={(e: { target: { value: SetStateAction<string>; }; }) => setCidade(e.target.value)}
-        />
+          onChange={handleSelectCity}
+        >
+          <option value="0">Selecione uma cidade</option>
+          {cities.map((city) => (
+            <option key={city.id} value={city.nome}>
+              {city.nome}
+            </option>
+          ))}
+        </select>
       </Grid>
     </Grid>
   );
