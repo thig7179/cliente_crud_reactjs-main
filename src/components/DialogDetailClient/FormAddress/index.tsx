@@ -14,7 +14,6 @@ import { toast } from "react-toastify";
 import { httpService } from "../../../services/HttpService";
 import { Cliente, Endereco } from "../../../types/Cliente";
 import axios from "axios";
-import 'bootstrap/dist/css/bootstrap.min.css';
 
 type Props = {
   cliente: Cliente;
