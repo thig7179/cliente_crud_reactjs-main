@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
 import Dialog from "@material-ui/core/Dialog";
@@ -25,7 +25,6 @@ import { Cliente } from "../../types/Cliente";
 
 export function DialogFormUser() {
   const ctx = useAppcontext();
-
   const [isOpen, setIsOpen] = useState(true);
   const [cpf, setCpf] = useState(ctx.clienteSelected?.cpf || "");
   const [nome, setNome] = useState(ctx.clienteSelected?.nome || "");
@@ -37,6 +36,7 @@ export function DialogFormUser() {
       ? new Date(ctx.clienteSelected.data_nascimento)
       : null
   );
+
 
   useEffect(() => {
     if (!isOpen) {

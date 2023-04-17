@@ -19,17 +19,25 @@ import { Cliente } from "../../types/Cliente";
 import { httpService } from "../../services/HttpService";
 import { format as dateFnsFormat } from "date-fns";
 import { DialogDetailClient } from "../DialogDetailClient";
+import Pagination from '@mui/material/Pagination';
+import { breadcrumbsClasses } from "@mui/material";
 
 export function ClientsTable() {
   const appContext = useAppcontext();
 
   useEffect(() => {
-    appContext.listClients();
+     appContext.listClients();
   }, []);
 
   const [openDialogDelete, setOpenDialogDelete] = useState(false);
   const [openDetail, setOpenDetail] = useState(false);
   const [userSelected, setUserSelected] = useState<Cliente | null>(null);
+  const [busca, setBusca] = useState('');
+
+  const clientFilter = appContext.clientes.filter(cliente => cliente.nome.toLowerCase().includes(busca.toLowerCase()) 
+                                                  || cliente.cpf.includes(busca)
+                                                  || cliente.sexo.includes(busca)
+                                                  || cliente.id.toString().includes(busca.toString()));
 
   const handleClickDelete = (user: Cliente) => {
     setUserSelected(user);
@@ -58,6 +66,11 @@ export function ClientsTable() {
   return (
     <React.Fragment>
       <Table size="medium">
+      <TableHead>
+          <TableRow>
+            <TableCell>Buscar: <input type="search" value={busca} onChange={(ev)=> setBusca(ev.target.value)} placeholder="Pesquisar..."></input></TableCell>
+          </TableRow>
+        </TableHead>
         <TableHead>
           <TableRow>
             <TableCell>id</TableCell>
@@ -69,7 +82,7 @@ export function ClientsTable() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {appContext.clientes.map((cliente) => (
+          {clientFilter.map((cliente) => (
             <TableRow key={cliente.id}>
               <TableCell>{cliente.id}</TableCell>
               <TableCell>{cliente.cpf}</TableCell>
@@ -109,6 +122,12 @@ export function ClientsTable() {
               </TableCell>
             </TableRow>
           ))}
+          <TableRow>
+            <TableCell>
+              <Pagination 
+              count={10} />
+            </TableCell> 
+          </TableRow>
         </TableBody>
       </Table>
 
